@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_ICON = 'mdi:robot'
 DOMAIN = 'automower'
-REQUIREMENTS = ['pyhusmow==0.1.1']
+REQUIREMENTS = ['pyhusmow@https://github.com/johan12345/pyhusmow/archive/master.zip#md5=874f1a2aa8666630b5e022417aa73ea9']
 VENDOR = 'Husqvarna'
 
 # TODO: Add more statuses as we observe them
@@ -66,7 +66,8 @@ ERROR_MESSAGES = {
 MODELS = {
     'G': 'Automower 430X',
     'H': 'Automower 450X',
-    'L': 'Automower 315'
+    'L': 'Automower 315',
+    '14': 'Sileno City'
 }
 
 IGNORED_API_STATE_ATTRIBUTES = [
@@ -189,11 +190,11 @@ class AutomowerDevice(VacuumDevice):
 
         # Ignore some unneeded attributes & format error messages
         ignored_attributes = list(IGNORED_API_STATE_ATTRIBUTES)
-        if attributes['lastErrorCode'] > 0:
+        if 'lastErrorCode' in attributes and attributes['lastErrorCode'] > 0:
             attributes['lastErrorMessage'] = ERROR_MESSAGES.get(attributes['lastErrorCode'])
         else:
             ignored_attributes.extend(['lastErrorCode', 'lastErrorCodeTimestamp', 'lastErrorMessage'])
-        if attributes['nextStartSource'] == 'NO_SOURCE':
+        if 'nextStartSource' in attributes and attributes['nextStartSource'] == 'NO_SOURCE':
             ignored_attributes.append('nextStartTimestamp')
 
         return sorted({ k: v for k, v in attributes.items() if not k in ignored_attributes }.items())
@@ -216,12 +217,12 @@ class AutomowerDevice(VacuumDevice):
     @property
     def lat(self):
         """Return the current latitude of the automower."""
-        return self._state['lastLocations'][0]['latitude']
+        return self._state['lastLocations'][0]['latitude'] if 'lastLocations' in self._state else None
 
     @property
     def lon(self):
         """Return the current longitude of the automower."""
-        return self._state['lastLocations'][0]['longitude']
+        return self._state['lastLocations'][0]['longitude'] if 'lastLocations' in self._state else None
 
     @property
     def should_poll(self):
